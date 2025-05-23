@@ -51,6 +51,8 @@
             border-radius: 1rem;
             overflow: hidden;
             box-shadow: 0 4px 6px var(--header-shadow);
+            /* Adjust max-height for mobile to fit better */
+            max-height: 95vh; /* Use viewport height to ensure it fits within the screen */
         }
 
         header {
@@ -695,9 +697,17 @@
         .history-goal-details {
             border: 1px solid var(--border-color);
             border-radius: 0.75rem;
+            padding: 1rem; /* Added padding to match goal-card */
+            margin-bottom: 1rem; /* Added margin to match goal-card */
             overflow: hidden;
             background-color: var(--background-light);
             box-shadow: 0 2px 4px var(--box-shadow-light);
+            position: relative; /* Added for consistent positioning */
+        }
+
+        .history-goal-details:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px var(--box-shadow-medium);
         }
 
         .history-goal-summary {
