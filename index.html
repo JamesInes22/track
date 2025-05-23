@@ -1,0 +1,1906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Savings Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Variables for Theming */
+        :root {
+            --primary-color: #4f46e5; /* Default Purple */
+            --primary-dark-color: #6d28d9; /* Darker Purple for active/hover */
+            --accent-color: #a78bfa; /* Lighter Purple for inactive nav */
+            --progress-bar-completed-color: #22c55e; /* Green for completed progress */
+            --progress-bar-completed-dark-color: #16a34a; /* Darker Green */
+            --danger-color: #ef4444; /* Red for delete/remove */
+            --danger-dark-color: #dc2626; /* Darker Red */
+            --text-color: #334155;
+            --secondary-text-color: #64748b;
+            --background-light: #f8fafc;
+            --background-white: #ffffff;
+            --border-color: #e2e8f0;
+            --input-border-color: #cbd5e1;
+            --input-focus-shadow: rgba(79, 70, 229, 0.2);
+            --header-shadow: rgba(0, 0, 0, 0.1);
+            --box-shadow-light: rgba(0, 0, 0, 0.05);
+            --box-shadow-medium: rgba(0, 0, 0, 0.1);
+            --box-shadow-dark: rgba(0, 0, 0, 0.2);
+        }
+
+        /* Custom styles to ensure full height and proper layout */
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: "Inter", sans-serif;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--background-light); /* Apply background from variable */
+        }
+
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+            background-color: var(--background-light);
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 4px 6px var(--header-shadow);
+        }
+
+        header {
+            background-color: var(--primary-color); /* Use variable */
+            color: white;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            font-size: 1.75rem;
+            font-weight: bold;
+            box-shadow: 0 2px 4px var(--header-shadow);
+            font-family: 'Inter', sans-serif;
+        }
+
+        main {
+            flex-grow: 1;
+            padding: 1.5rem 1rem;
+            overflow-y: auto;
+            background-color: var(--background-white);
+        }
+
+        .content-section {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        nav {
+            background-color: var(--primary-color); /* Use variable */
+            display: flex;
+            justify-content: space-around;
+            padding: 0;
+            min-height: 5rem;
+            box-shadow: 0 -2px 4px var(--header-shadow);
+        }
+
+        .nav-button {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--accent-color); /* Use variable */
+            height: 100%;
+            padding: 0.75rem 0.5rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            transition: color 0.3s ease, background-color 0.3s ease;
+            border-radius: 0.75rem;
+        }
+
+        .nav-button.active {
+            color: white;
+            background-color: var(--primary-dark-color); /* Use variable */
+            font-weight: bold;
+        }
+
+        /* SVG icon styling for better visibility */
+        .nav-button svg {
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+
+        /* Form styling for Add Savings */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--input-border-color);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px var(--input-focus-shadow);
+        }
+
+        .submit-button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            width: 100%;
+        }
+
+        .submit-button:hover {
+            background-color: var(--primary-dark-color);
+            transform: translateY(-1px);
+        }
+
+        /* Progress bar styling */
+        .progress-container {
+            width: 100%;
+            background-color: var(--border-color);
+            border-radius: 0.5rem;
+            height: 1.25rem;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary-color);
+            width: 0%;
+            border-radius: 0.5rem;
+            transition: width 0.5s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 0.5rem;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .progress-bar.completed {
+            background-color: var(--progress-bar-completed-color);
+        }
+
+        /* Styles for individual goal cards on Home tab */
+        .goal-card {
+            background-color: var(--background-white);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px var(--box-shadow-light);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .goal-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px var(--box-shadow-medium);
+        }
+
+        .goal-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .goal-card p {
+            font-size: 0.9rem;
+            color: var(--secondary-text-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .goal-actions {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .goal-action-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .goal-action-button i {
+            width: 1.25rem;
+            height: 1.25rem;
+            font-size: 1.25rem;
+        }
+
+        .goal-action-button:hover {
+            background-color: var(--border-color);
+        }
+
+        .goal-action-button.complete-button {
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .goal-action-button.complete-button:hover {
+            background-color: var(--primary-dark-color);
+        }
+
+        .goal-action-button.complete-button.completed-status {
+            background-color: var(--progress-bar-completed-color);
+        }
+
+        .goal-action-button.complete-button.completed-status:hover {
+            background-color: var(--progress-bar-completed-dark-color);
+        }
+
+        .goal-action-button.delete-button i {
+            color: var(--danger-color);
+        }
+
+        /* Message box for alerts */
+        #message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--text-color);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 8px 16px var(--box-shadow-dark);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            max-width: 300px;
+            text-align: center;
+        }
+
+        #message-box button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+
+        #message-box button:hover {
+            background-color: var(--primary-dark-color);
+        }
+
+        /* Confirmation Dialog Styles */
+        #confirmation-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--text-color);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 8px 16px var(--box-shadow-dark);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            max-width: 300px;
+            text-align: center;
+        }
+
+        #confirmation-box .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            width: 100%;
+        }
+
+        #confirmation-box button {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+
+        #confirmation-box button.confirm-yes {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        #confirmation-box button.confirm-yes:hover {
+            background-color: var(--danger-dark-color);
+        }
+
+        #confirmation-box button.confirm-no {
+            background-color: var(--secondary-text-color);
+            color: white;
+        }
+
+        #confirmation-box button.confirm-no:hover {
+            background-color: #475569; /* Specific gray hover */
+        }
+
+        /* Combined Add/Remove Funds Section */
+        .funds-management-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        /* Container for input and symbol */
+        .input-with-currency {
+            position: relative;
+            flex-grow: 2;
+            display: flex;
+            align-items: center;
+        }
+
+        .funds-management-group input {
+            flex-grow: 1;
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--input-border-color);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease, opacity 0.3s ease;
+            padding-left: 2rem;
+        }
+
+        .funds-management-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px var(--input-focus-shadow);
+        }
+
+        .funds-management-group .currency-symbol {
+            position: absolute;
+            left: 0.75rem;
+            color: var(--secondary-text-color);
+            font-size: 1rem;
+            pointer-events: none;
+        }
+
+        .funds-management-group button {
+            flex-shrink: 0;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease, opacity 0.3s ease;
+            white-space: nowrap;
+            color: white;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+        }
+
+        .funds-management-group button:hover {
+            transform: translateY(-1px);
+        }
+
+        /* Specific button colors */
+        #add-funds-button {
+            background-color: var(--progress-bar-completed-color);
+        }
+        #add-funds-button:hover {
+            background-color: var(--progress-bar-completed-dark-color);
+        }
+
+        #remove-funds-button {
+            background-color: var(--danger-color);
+        }
+        #remove-funds-button:hover {
+            background-color: var(--danger-dark-color);
+        }
+
+        /* Disabled state for input and buttons */
+        .funds-management-group input:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background-color: #f1f5f9;
+        }
+
+        .funds-management-group button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background-color: #94a3b8;
+        }
+
+        /* Styles for the new back button at the top of manage-savings */
+        .back-button-top {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            cursor: pointer;
+            font-size: 1.5rem;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s ease;
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            z-index: 10;
+        }
+
+        .back-button-top:hover {
+            background-color: #e0e7ff; /* Lighter shade of primary background */
+        }
+
+        #manage-savings-content h2 {
+            margin-left: 2.5rem;
+            position: relative;
+            padding-top: 0.5rem;
+        }
+
+        /* Styles for the transaction history dropdown */
+        .transaction-history-container {
+            margin-top: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            background-color: var(--background-light);
+        }
+
+        .transaction-history-container details {
+            width: 100%;
+        }
+
+        .transaction-history-container summary {
+            background-color: #e0e7ff; /* Lighter primary background */
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            list-style: none;
+        }
+
+        .transaction-history-container summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .transaction-history-container summary:after {
+            content: '▼';
+            font-size: 0.8rem;
+            transition: transform 0.2s ease;
+        }
+
+        .transaction-history-container details[open] summary:after {
+            content: '▲';
+            transform: rotate(0deg);
+        }
+
+        .transaction-history-list {
+            padding: 0.5rem 1rem;
+            background-color: var(--background-white);
+        }
+
+        .transaction-item {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed var(--border-color);
+            font-size: 0.9rem;
+            color: var(--secondary-text-color);
+        }
+
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-item .type {
+            font-weight: 500;
+            color: var(--text-color);
+            flex-basis: 100%;
+            margin-bottom: 0.25rem;
+        }
+
+        .transaction-item .date-amount-group {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
+        }
+
+        .transaction-item .amount {
+            color: var(--progress-bar-completed-color);
+            font-weight: bold;
+        }
+
+        .transaction-item .amount.removed {
+            color: var(--danger-color);
+        }
+
+        .transaction-item .date {
+            font-size: 0.8rem;
+            color: var(--secondary-text-color);
+        }
+
+        /* Styles for deadline display and edit section */
+        .deadline-display-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .deadline-display-group p {
+            margin: 0;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        .deadline-display-group .edit-icon {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+            padding: 0.2rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s ease;
+        }
+        .deadline-display-group .edit-icon:hover {
+            background-color: #e0e7ff;
+        }
+
+        .deadline-edit-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .deadline-edit-group label {
+            flex-shrink: 0;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        .deadline-edit-group input[type="date"] {
+            flex-grow: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--input-border-color);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease, opacity 0.3s ease;
+        }
+        .deadline-edit-group button {
+            flex-shrink: 0;
+            width: 80px;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease, opacity 0.3s ease;
+            white-space: nowrap;
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .deadline-edit-group button:hover {
+            background-color: var(--primary-dark-color);
+        }
+        .deadline-edit-group input:disabled,
+        .deadline-edit-group button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background-color: #f1f5f9;
+        }
+        .deadline-edit-group button:disabled {
+            background-color: #94a3b8;
+        }
+
+        /* Styles for the completed message container */
+        .completed-message-container {
+            background-color: var(--progress-bar-completed-color);
+            color: white;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 8px var(--box-shadow-medium);
+            margin-bottom: 1.5rem;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .completed-message-container.show {
+            opacity: 1;
+            display: flex;
+        }
+
+        .completed-message-container i {
+            font-size: 2rem;
+            color: #facc15;
+        }
+
+        /* Styling for buttons with icons */
+        .funds-management-group button i {
+            margin-right: 0.5rem;
+        }
+
+        /* Styles for history dropdowns */
+        .history-goals-dropdown-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .history-goal-details {
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            background-color: var(--background-light);
+            box-shadow: 0 2px 4px var(--box-shadow-light);
+        }
+
+        .history-goal-summary {
+            background-color: #e0e7ff; /* Lighter shade of primary background */
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            list-style: none;
+        }
+
+        .history-goal-summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .history-goal-summary:after {
+            content: '▼';
+            font-size: 0.8rem;
+            transition: transform 0.2s ease;
+        }
+
+        .history-goal-details[open] .history-goal-summary:after {
+            content: '▲';
+            transform: rotate(0deg);
+        }
+
+        .history-goal-summary .main-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            flex-grow: 1;
+        }
+
+        .history-goal-summary .main-info strong {
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .history-goal-summary .main-info span {
+            font-size: 0.85rem;
+            color: var(--secondary-text-color);
+        }
+
+        .history-goal-summary .status {
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-left: auto;
+        }
+        .history-goal-summary .status.completed {
+            color: var(--progress-bar-completed-color);
+        }
+        .history-goal-summary .status.in-progress {
+            color: var(--primary-color);
+        }
+
+        .history-goal-expanded-details {
+            padding: 0.5rem 1rem;
+            background-color: var(--background-white);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--secondary-text-color);
+        }
+
+        .history-goal-transactions {
+            padding: 0.5rem 1rem;
+            background-color: var(--background-white);
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Apply theme color to left and bottom border of goal cards when 'add-savings' is active */
+        .goal-card.active-theme-border {
+            border-left: 4px solid var(--primary-color);
+            border-bottom: 4px solid var(--primary-color);
+            border-top-left-radius: 0; /* Adjust rounded corners for the border */
+            border-bottom-left-radius: 0; /* Adjust rounded corners for the border */
+        }
+
+        /* New style for completed goals in history */
+        .history-goal-details.completed-history-goal {
+            border-left: 4px solid var(--progress-bar-completed-color);
+            border-bottom: 4px solid var(--progress-bar-completed-color);
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div id="app-container" class="rounded-xl shadow-lg">
+        <header>
+            Savings Tracker
+        </header>
+
+        <main>
+            <section id="home-content" class="content-section active p-4">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Your Savings Goals</h2>
+                <p class="text-gray-600 leading-relaxed mb-6">
+                    Track your progress towards various savings goals here.
+                </p>
+                <div id="in-progress-goals-container" class="space-y-4">
+                    <p id="no-in-progress-goals-message" class="text-gray-500 text-center hidden">No active savings goals. Create one or mark an existing goal as in-progress!</p>
+                </div>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mt-8 mb-4">Completed Goals</h2>
+                <p class="text-gray-600 leading-relaxed mb-6">
+                    Here are the goals you've successfully completed.
+                </p>
+                <div id="completed-goals-container" class="space-y-4">
+                    <p id="no-completed-goals-message" class="text-gray-500 text-center hidden">No completed goals yet. Keep saving!</p>
+                </div>
+            </section>
+
+            <section id="add-savings-content" class="content-section p-4">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Create New Savings Goal</h2>
+                <form id="savings-form" class="space-y-4">
+                    <div class="form-group">
+                        <label for="goalName">Goal Name</label>
+                        <input type="text" id="goalName" name="goalName" placeholder="e.g., Vacation Fund, New Car" required class="w-full">
+                    </div>
+                    <div class="form-group">
+                        <label for="targetAmount">Target Amount (₱)</label>
+                        <input type="number" id="targetAmount" name="targetAmount" placeholder="e.g., 1000.00" step="0.01" required class="w-full">
+                    </div>
+                    <div class="form-group">
+                        <label for="initialSavedAmount">Initial Saved Amount (₱)</label>
+                        <input type="number" id="initialSavedAmount" name="initialSavedAmount" placeholder="e.g., 50.00 (optional)" step="0.01" value="0" class="w-full">
+                    </div>
+                    <div class="form-group">
+                        <label for="deadline">Deadline (Optional)</label>
+                        <input type="date" id="deadline" name="deadline" class="w-full">
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category (Optional)</label>
+                        <input type="text" id="category" name="category" placeholder="e.g., Travel, Vehicle" class="w-full">
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description (Optional)</label>
+                        <textarea id="description" name="description" rows="3" placeholder="e.g., Saving for a trip to Japan next year" class="w-full"></textarea>
+                    </div>
+                    <button type="submit" class="submit-button">Create Goal</button>
+                </form>
+            </section>
+
+            <section id="manage-savings-content" class="content-section p-4 relative">
+                <button class="back-button-top" onclick="showTab('home')" title="Back to Goals">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4" id="manage-goal-name"></h2>
+                <p class="text-gray-600 mb-2">Current Saved: <span id="manage-current-amount" class="font-bold">₱0.00</span></p>
+                <p class="text-gray-600 mb-4">Target: <span id="manage-target-amount" class="font-bold">₱0.00</span></p>
+                
+                <div class="deadline-display-group" id="deadline-display-group">
+                    <p>Deadline: <span id="manage-deadline-text">N/A</span></p>
+                    <button class="edit-icon" id="edit-deadline-button" title="Edit Deadline">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                </div>
+
+                <div class="deadline-edit-group" id="deadline-edit-group">
+                    <label for="editDeadline">New Deadline:</label>
+                    <input type="date" id="editDeadline" name="editDeadline">
+                    <button type="button" id="updateDeadlineButton" class="submit-button">Update</button>
+                </div>
+
+                <div class="progress-container mb-6">
+                    <div class="progress-bar" id="manage-progress-bar" style="width: 0%;">
+                        <span id="manage-progress-percentage">0%</span>
+                    </div>
+                </div>
+
+                <div id="completed-message-container" class="completed-message-container">
+                    <i class="fa-solid fa-trophy"></i>
+                    <p>Goal Completed!</p>
+                    <i class="fa-solid fa-star"></i>
+                </div>
+
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Add/Remove Amount</h3>
+                <div class="funds-management-group">
+                    <div class="input-with-currency">
+                        <span class="currency-symbol">₱</span>
+                        <input type="number" id="amountInput" name="amountInput" placeholder="" step="0.01">
+                    </div>
+                    <button type="button" id="add-funds-button" class="submit-button">
+                        <i class="fa-solid fa-plus"></i> ADD
+                    </button>
+                    <button type="button" id="remove-funds-button" class="submit-button">
+                        <i class="fa-solid fa-minus"></i> REMOVE
+                    </button>
+                </div>
+
+                <div class="transaction-history-container">
+                    <details>
+                        <summary>Transaction History</summary>
+                        <div id="transaction-history-list" class="transaction-history-list">
+                            <p class="text-gray-500 text-center py-4">No transactions yet.</p>
+                        </div>
+                    </details>
+                </div>
+                
+            </section>
+
+            <section id="history-content" class="content-section p-4">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">In Progress Goals</h2>
+                <div id="history-in-progress-goals-container" class="space-y-4">
+                    <p id="no-history-in-progress-goals-message" class="text-gray-500 text-center hidden">No in-progress goals in history.</p>
+                </div>
+
+                <h2 class="text-2xl font-semibold text-gray-800 mt-8 mb-4">Completed Goals</h2>
+                <div id="history-completed-goals-container" class="space-y-4">
+                    <p id="no-history-completed-goals-message" class="text-gray-500 text-center hidden">No completed goals in history.</p>
+                </div>
+            </section>
+        </main>
+
+        <nav>
+            <button id="home-button" class="nav-button active" onclick="showTab('home')">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125h9.75a1.125 1.125 0 0 0 1.125-1.125V9.75M8.25 21h8.25" />
+                </svg>
+                Home
+            </button>
+            <button id="add-savings-button" class="nav-button" onclick="showTab('add-savings')">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+                Add Savings
+            </button>
+            <button id="history-button" class="nav-button" onclick="showTab('history')">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+                History
+            </button>
+        </nav>
+    </div>
+
+    <div id="message-box">
+        <p id="message-text"></p>
+        <button id="message-ok-button">OK</button>
+    </div>
+
+    <div id="confirmation-box">
+        <p id="confirmation-text"></p>
+        <div class="button-group">
+            <button class="confirm-yes" id="confirm-yes-button">Yes</button>
+            <button class="confirm-no" id="confirm-no-button">No</button>
+        </div>
+    </div>
+
+    <script>
+        // Get references to all content sections
+        const homeContent = document.getElementById('home-content');
+        const addSavingsContent = document.getElementById('add-savings-content');
+        const historyContent = document.getElementById('history-content');
+        const manageSavingsContent = document.getElementById('manage-savings-content'); 
+
+        // Get references to all navigation buttons
+        const homeButton = document.getElementById('home-button');
+        const addSavingsButton = document.getElementById('add-savings-button');
+        const historyButton = document.getElementById('history-button');
+
+        // Get references for the savings form and history elements
+        const savingsForm = document.getElementById('savings-form');
+        // Updated references for history goals containers
+        const historyInProgressGoalsContainer = document.getElementById('history-in-progress-goals-container');
+        const noHistoryInProgressGoalsMessage = document.getElementById('no-history-in-progress-goals-message');
+        const historyCompletedGoalsContainer = document.getElementById('history-completed-goals-container');
+        const noHistoryCompletedGoalsMessage = document.getElementById('no-history-completed-goals-message');
+        
+        // Updated references for home goals containers
+        const inProgressGoalsContainer = document.getElementById('in-progress-goals-container');
+        const noInProgressGoalsMessage = document.getElementById('no-in-progress-goals-message');
+        const completedGoalsContainer = document.getElementById('completed-goals-container');
+        const noCompletedGoalsMessage = document.getElementById('no-completed-goals-message');
+
+        // References for manage savings section elements
+        const manageGoalName = document.getElementById('manage-goal-name');
+        const manageCurrentAmount = document.getElementById('manage-current-amount');
+        const manageTargetAmount = document.getElementById('manage-target-amount');
+        const manageProgressBar = document.getElementById('manage-progress-bar');
+        const manageProgressPercentage = document.getElementById('manage-progress-percentage');
+        const amountInput = document.getElementById('amountInput'); 
+        const addFundsButton = document.getElementById('add-funds-button');
+        const removeFundsButton = document.getElementById('remove-funds-button');
+        
+        // New references for deadline edit
+        const deadlineDisplayGroup = document.getElementById('deadline-display-group');
+        const manageDeadlineText = deadlineDisplayGroup.querySelector('span'); 
+        const editDeadlineButton = document.getElementById('edit-deadline-button');
+        const deadlineEditGroup = document.getElementById('deadline-edit-group');
+        const editDeadlineInput = document.getElementById('editDeadline');
+        const updateDeadlineButton = document.getElementById('updateDeadlineButton');
+
+        // Reference for transaction history list (on manage savings tab)
+        const transactionHistoryList = document.getElementById('transaction-history-list');
+
+        // Reference for the completed message container
+        const completedMessageContainer = document.getElementById('completed-message-container');
+
+        // Get references for the message box
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+        const messageOkButton = document.getElementById('message-ok-button');
+
+        // Get references for the confirmation dialog
+        const confirmationBox = document.getElementById('confirmation-box');
+        const confirmationText = document = document.getElementById('confirmation-text');
+        const confirmYesButton = document.getElementById('confirm-yes-button');
+        const confirmNoButton = document.getElementById('confirm-no-button');
+
+        // Variable to store the ID of the goal to be deleted or managed
+        let goalToDeleteId = null;
+        let currentManagedGoalId = null; // Stores the ID of the goal currently being managed
+
+        // Array to store savings goals data
+        let savingsGoals = [];
+
+        /**
+         * Displays a custom message box instead of alert().
+         * @param {string} message - The message to display.
+         */
+        function showMessageBox(message) {
+            messageText.textContent = message;
+            messageBox.style.display = 'flex';
+        }
+
+        // Event listener for the OK button in the message box
+        messageOkButton.addEventListener('click', () => {
+            messageBox.style.display = 'none';
+        });
+
+        /**
+         * Shows the confirmation dialog.
+         * @param {string} message - The message to display in the confirmation dialog.
+         * @param {string} id - The ID of the item to be acted upon (e.g., deleted).
+         */
+        function showConfirmationBox(message, id) {
+            confirmationText.textContent = message;
+            goalToDeleteId = id; // Store the ID for later use
+            confirmationBox.style.display = 'flex';
+        }
+
+        // Event listeners for the confirmation dialog buttons
+        confirmYesButton.addEventListener('click', () => {
+            if (goalToDeleteId) {
+                // Proceed with deletion if an ID is stored
+                performDeleteGoal(goalToDeleteId);
+                goalToDeleteId = null; // Clear the stored ID
+            }
+            confirmationBox.style.display = 'none'; // Hide the dialog
+        });
+
+        confirmNoButton.addEventListener('click', () => {
+            goalToDeleteId = null; // Clear the stored ID
+            confirmationBox.style.display = 'none'; // Hide the dialog
+        });
+
+
+        /**
+         * Shows the selected tab content and updates the active navigation button.
+         * @param {string} tabName - The name of the tab to show ('home', 'add-savings', 'history', 'manage-savings').
+         */
+        function showTab(tabName) {
+            // Hide all content sections
+            homeContent.classList.remove('active');
+            addSavingsContent.classList.remove('active');
+            historyContent.classList.remove('active');
+            manageSavingsContent.classList.remove('active'); 
+
+            // Deactivate all navigation buttons
+            homeButton.classList.remove('active');
+            addSavingsButton.classList.remove('active');
+            historyButton.classList.remove('active');
+
+            // Remove the active-theme-border class from all goal cards when switching tabs
+            document.querySelectorAll('.goal-card').forEach(card => {
+                card.classList.remove('active-theme-border');
+            });
+
+            // Show the selected content and activate the corresponding button
+            if (tabName === 'home') {
+                homeContent.classList.add('active');
+                homeButton.classList.add('active');
+                renderHomeGoals(); // Render goals when Home tab is shown
+            } else if (tabName === 'add-savings') {
+                addSavingsContent.classList.add('active');
+                addSavingsButton.classList.add('active');
+                // When on Add Savings tab, apply the border to all goal cards
+                document.querySelectorAll('.goal-card').forEach(card => {
+                    card.classList.add('active-theme-border');
+                });
+            } else if (tabName === 'history') {
+                historyContent.classList.add('active');
+                historyButton.classList.add('active');
+                renderHistoryGoals(); // Render goals in history whenever the tab is opened
+            } else if (tabName === 'manage-savings') {
+                manageSavingsContent.classList.add('active');
+                // No nav button activation for this, as it's a sub-view
+            }
+        }
+
+        /**
+         * Renders the savings goals on the Home tab, separating in-progress and completed goals.
+         */
+        function renderHomeGoals() {
+            inProgressGoalsContainer.innerHTML = ''; // Clear existing in-progress goals
+            completedGoalsContainer.innerHTML = ''; // Clear existing completed goals
+
+            const inProgressGoals = savingsGoals.filter(goal => goal.status === 'in-progress' && goal.currentAmount < goal.targetAmount);
+            const completedGoals = savingsGoals.filter(goal => goal.status === 'completed' || goal.currentAmount >= goal.targetAmount);
+
+            if (inProgressGoals.length === 0) {
+                noInProgressGoalsMessage.classList.remove('hidden');
+            } else {
+                noInProgressGoalsMessage.classList.add('hidden');
+                inProgressGoals.forEach(goal => {
+                    const progressPercentage = (goal.currentAmount / goal.targetAmount) * 100;
+                    const card = document.createElement('div');
+                    card.classList.add('goal-card');
+                    card.setAttribute('data-goal-id', goal.id); // Add data attribute for easy ID retrieval
+                    card.onclick = () => manageSavings(goal.id); // Make the card clickable
+
+                    let statusButtonText = 'In Progress';
+                    let statusButtonClass = 'complete-button';
+                    let statusButtonOnClick = `markGoalComplete('${goal.id}')`;
+
+                    card.innerHTML = `
+                        <div class="goal-actions">
+                            <button class="goal-action-button ${statusButtonClass}" onclick="event.stopPropagation(); ${statusButtonOnClick}" title="${statusButtonText}">
+                                ${statusButtonText}
+                            </button>
+                            <button class="goal-action-button delete-button" onclick="event.stopPropagation(); confirmDeleteGoal('${goal.id}', '${goal.name}')" title="Delete Goal">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                        <h3 class="text-xl font-semibold">${goal.name}</h3>
+                        <p>Category: ${goal.category || 'N/A'}</p>
+                        <p>Description: ${goal.description || 'No description'}</p>
+                        <p>Deadline: ${goal.deadline || 'N/A'}</p>
+                        <p class="mt-2">Saved: ₱${goal.currentAmount.toFixed(2)} / Target: ₱${goal.targetAmount.toFixed(2)}</p>
+                        <div class="progress-container">
+                            <div class="progress-bar" style="width: ${progressPercentage > 100 ? 100 : progressPercentage}%;">
+                                ${progressPercentage.toFixed(0)}%
+                            </div>
+                        </div>
+                    `;
+                    inProgressGoalsContainer.appendChild(card);
+                });
+            }
+
+            if (completedGoals.length === 0) {
+                noCompletedGoalsMessage.classList.remove('hidden');
+            } else {
+                noCompletedGoalsMessage.classList.add('hidden');
+                completedGoals.forEach(goal => {
+                    const progressPercentage = (goal.currentAmount / goal.targetAmount) * 100;
+                    const card = document.createElement('div');
+                    card.classList.add('goal-card');
+                    card.setAttribute('data-goal-id', goal.id); // Add data attribute for easy ID retrieval
+                    card.onclick = () => manageSavings(goal.id); // Make the card clickable
+
+                    let statusButtonText = 'Completed';
+                    let statusButtonClass = 'complete-button completed-status';
+                    let statusButtonOnClick = `markGoalInProgress('${goal.id}')`;
+
+                    card.innerHTML = `
+                        <div class="goal-actions">
+                            <button class="goal-action-button ${statusButtonClass}" onclick="event.stopPropagation(); ${statusButtonOnClick}" title="${statusButtonText}">
+                                ${statusButtonText}
+                            </button>
+                            <button class="goal-action-button delete-button" onclick="event.stopPropagation(); confirmDeleteGoal('${goal.id}', '${goal.name}')" title="Delete Goal">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                        <h3 class="text-xl font-semibold">${goal.name}</h3>
+                        <p>Category: ${goal.category || 'N/A'}</p>
+                        <p>Description: ${goal.description || 'No description'}</p>
+                        <p>Deadline: ${goal.deadline || 'N/A'}</p>
+                        <p class="mt-2">Saved: ₱${goal.currentAmount.toFixed(2)} / Target: ₱${goal.targetAmount.toFixed(2)}</p>
+                        <div class="progress-container">
+                            <div class="progress-bar completed" style="width: ${progressPercentage > 100 ? 100 : progressPercentage}%;">
+                                ${progressPercentage.toFixed(0)}%
+                            </div>
+                        </div>
+                    `;
+                    completedGoalsContainer.appendChild(card);
+                });
+            }
+        }
+
+        /**
+         * Renders the created savings goals in the History tab as dropdowns.
+         */
+        function renderHistoryGoals() {
+            historyInProgressGoalsContainer.innerHTML = ''; // Clear existing in-progress goals
+            historyCompletedGoalsContainer.innerHTML = ''; // Clear existing completed goals
+
+            const inProgressGoals = savingsGoals.filter(goal => goal.status === 'in-progress' && goal.currentAmount < goal.targetAmount);
+            const completedGoals = savingsGoals.filter(goal => goal.status === 'completed' || goal.currentAmount >= goal.targetAmount);
+
+            if (inProgressGoals.length === 0) {
+                noHistoryInProgressGoalsMessage.classList.remove('hidden');
+            } else {
+                noHistoryInProgressGoalsMessage.classList.add('hidden');
+                // Sort data by date created in descending order (most recent first)
+                const sortedInProgressGoals = [...inProgressGoals].sort((a, b) => new Date(b.dateCreated) - new Date(a.dateCreated));
+
+                sortedInProgressGoals.forEach(goal => {
+                    const detailsElement = document.createElement('details');
+                    detailsElement.classList.add('history-goal-details');
+
+                    const summaryElement = document.createElement('summary');
+                    summaryElement.classList.add('history-goal-summary');
+                    
+                    const statusClass = goal.status === 'completed' ? 'completed' : 'in-progress';
+
+                    // Populate summary with only goal name and date created
+                    summaryElement.innerHTML = `
+                        <div class="main-info">
+                            <strong>${goal.name}</strong>
+                            <span>Created: ${goal.dateCreated}</span>
+                        </div>
+                        <span class="status ${statusClass}">${goal.status.charAt(0).toUpperCase() + goal.status.slice(1)}</span>
+                    `;
+
+                    const expandedDetailsDiv = document.createElement('div');
+                    expandedDetailsDiv.classList.add('history-goal-expanded-details');
+                    expandedDetailsDiv.innerHTML = `
+                        <p>Target: ₱${goal.targetAmount.toFixed(2)}</p>
+                        <p>Saved: ₱${goal.currentAmount.toFixed(2)}</p>
+                        <p>Deadline: ${goal.deadline || 'N/A'}</p>
+                        <p>Category: ${goal.category || 'N/A'}</p>
+                        <p>Description: ${goal.description || 'No description'}</p>
+                    `;
+
+                    const transactionsDiv = document.createElement('div');
+                    transactionsDiv.classList.add('history-goal-transactions');
+
+                    // Render transactions for this goal within the details element
+                    if (goal.transactions && goal.transactions.length > 0) {
+                        const sortedTransactions = [...goal.transactions].sort((a, b) => {
+                            const dateA = new Date(a.date);
+                            const dateB = new Date(b.date);
+                            const typeOrder = { 'add': 1, 'remove': 1, 'deadline_set': 2, 'status_change': 2, 'created': 3 };
+                            const orderA = typeOrder[a.type] || 99;
+                            const orderB = typeOrder[b.type] || 99;
+                            if (orderA !== orderB) { return orderA - orderB; } 
+                            return dateB - dateA;
+                        });
+
+                        sortedTransactions.forEach(transaction => {
+                            const transactionItem = document.createElement('div');
+                            transactionItem.classList.add('transaction-item');
+
+                            let amountDisplay = '';
+                            let amountClass = '';
+
+                            if (transaction.type === 'add') {
+                                amountDisplay = `+₱${transaction.amount.toFixed(2)}`;
+                                amountClass = 'amount';
+                            } else if (transaction.type === 'remove') {
+                                amountDisplay = `-₱${transaction.amount.toFixed(2)}`;
+                                amountClass = 'amount removed';
+                            }
+
+                            transactionItem.innerHTML = `
+                                <span class="type">${transaction.description}</span>
+                                <div class="date-amount-group">
+                                    <span class="date">${transaction.date}</span>
+                                    <span class="${amountClass}">${amountDisplay}</span>
+                                </div>
+                            `;
+                            transactionsDiv.appendChild(transactionItem);
+                        });
+                    } else {
+                        transactionsDiv.innerHTML = '<p class="text-gray-500 text-center py-4">No transactions yet for this goal.</p>';
+                    }
+
+                    detailsElement.appendChild(summaryElement);
+                    detailsElement.appendChild(expandedDetailsDiv); // Add expanded details
+                    detailsElement.appendChild(transactionsDiv);
+                    historyInProgressGoalsContainer.appendChild(detailsElement);
+                });
+            }
+
+            if (completedGoals.length === 0) {
+                noHistoryCompletedGoalsMessage.classList.remove('hidden');
+            } else {
+                noHistoryCompletedGoalsMessage.classList.add('hidden');
+                // Sort data by date created in descending order (most recent first)
+                const sortedCompletedGoals = [...completedGoals].sort((a, b) => new Date(b.dateCreated) - new Date(a.dateCreated));
+
+                sortedCompletedGoals.forEach(goal => {
+                    const detailsElement = document.createElement('details');
+                    detailsElement.classList.add('history-goal-details');
+
+                    // Add the 'completed-history-goal' class if the goal is completed
+                    if (goal.status === 'completed' || goal.currentAmount >= goal.targetAmount) {
+                        detailsElement.classList.add('completed-history-goal');
+                    }
+
+                    const summaryElement = document.createElement('summary');
+                    summaryElement.classList.add('history-goal-summary');
+                    
+                    const statusClass = goal.status === 'completed' ? 'completed' : 'in-progress';
+
+                    // Populate summary with only goal name and date created
+                    summaryElement.innerHTML = `
+                        <div class="main-info">
+                            <strong>${goal.name}</strong>
+                            <span>Created: ${goal.dateCreated}</span>
+                        </div>
+                        <span class="status ${statusClass}">${goal.status.charAt(0).toUpperCase() + goal.status.slice(1)}</span>
+                    `;
+
+                    const expandedDetailsDiv = document.createElement('div');
+                    expandedDetailsDiv.classList.add('history-goal-expanded-details');
+                    expandedDetailsDiv.innerHTML = `
+                        <p>Target: ₱${goal.targetAmount.toFixed(2)}</p>
+                        <p>Saved: ₱${goal.currentAmount.toFixed(2)}</p>
+                        <p>Deadline: ${goal.deadline || 'N/A'}</p>
+                        <p>Category: ${goal.category || 'N/A'}</p>
+                        <p>Description: ${goal.description || 'No description'}</p>
+                    `;
+
+                    const transactionsDiv = document.createElement('div');
+                    transactionsDiv.classList.add('history-goal-transactions');
+
+                    // Render transactions for this goal within the details element
+                    if (goal.transactions && goal.transactions.length > 0) {
+                        const sortedTransactions = [...goal.transactions].sort((a, b) => {
+                            const dateA = new Date(a.date);
+                            const dateB = new Date(b.date);
+                            const typeOrder = { 'add': 1, 'remove': 1, 'deadline_set': 2, 'status_change': 2, 'created': 3 };
+                            const orderA = typeOrder[a.type] || 99;
+                            const orderB = typeOrder[b.type] || 99;
+                            if (orderA !== orderB) { return orderA - orderB; } 
+                            return dateB - dateA;
+                        });
+
+                        sortedTransactions.forEach(transaction => {
+                            const transactionItem = document.createElement('div');
+                            transactionItem.classList.add('transaction-item');
+
+                            let amountDisplay = '';
+                            let amountClass = '';
+
+                            if (transaction.type === 'add') {
+                                amountDisplay = `+₱${transaction.amount.toFixed(2)}`;
+                                amountClass = 'amount';
+                            } else if (transaction.type === 'remove') {
+                                amountDisplay = `-₱${transaction.amount.toFixed(2)}`;
+                                amountClass = 'amount removed';
+                            }
+
+                            transactionItem.innerHTML = `
+                                <span class="type">${transaction.description}</span>
+                                <div class="date-amount-group">
+                                    <span class="date">${transaction.date}</span>
+                                    <span class="${amountClass}">${amountDisplay}</span>
+                                </div>
+                            `;
+                            transactionsDiv.appendChild(transactionItem);
+                        });
+                    } else {
+                        transactionsDiv.innerHTML = '<p class="text-gray-500 text-center py-4">No transactions yet for this goal.</p>';
+                    }
+
+                    detailsElement.appendChild(summaryElement);
+                    detailsElement.appendChild(expandedDetailsDiv); // Add expanded details
+                    detailsElement.appendChild(transactionsDiv);
+                    historyCompletedGoalsContainer.appendChild(detailsElement);
+                });
+            }
+        }
+
+        /**
+         * Renders the transaction history for the currently managed goal.
+         * This function is specifically for the 'Manage Savings' tab.
+         * @param {string} goalId - The ID of the goal whose transactions to render.
+         */
+        function renderTransactionHistory(goalId) {
+            transactionHistoryList.innerHTML = ''; // Clear existing history
+
+            const goal = savingsGoals.find(g => g.id === goalId);
+            if (goal && goal.transactions && goal.transactions.length > 0) {
+                // Custom sort order: 'add'/'remove' first (latest date), then others (latest date), then 'created' (latest date)
+                const sortedTransactions = [...goal.transactions].sort((a, b) => {
+                    const dateA = new Date(a.date);
+                    const dateB = new Date(b.date);
+
+                    // Define a custom order for transaction types
+                    const typeOrder = {
+                        'add': 1,
+                        'remove': 1,
+                        'deadline_set': 2,
+                        'status_change': 2,
+                        'created': 3
+                    };
+
+                    const orderA = typeOrder[a.type] || 99; 
+                    const orderB = typeOrder[b.type] || 99;
+
+                    // Primary sort: by type order (funds added/removed at top)
+                    if (orderA !== orderB) {
+                        return orderA - orderB;
+                    } 
+                    // Secondary sort: by date (latest first) for transactions of the same type order
+                    return dateB - dateA;
+                });
+
+                sortedTransactions.forEach(transaction => {
+                    const transactionItem = document.createElement('div');
+                    transactionItem.classList.add('transaction-item');
+
+                    let amountDisplay = '';
+                    let amountClass = '';
+
+                    if (transaction.type === 'add') {
+                        amountDisplay = `+₱${transaction.amount.toFixed(2)}`;
+                        amountClass = 'amount';
+                    } else if (transaction.type === 'remove') {
+                        amountDisplay = `-₱${transaction.amount.toFixed(2)}`;
+                        amountClass = 'amount removed';
+                    } else if (transaction.type === 'created' || transaction.type === 'deadline_set' || transaction.type === 'status_change') {
+                        amountDisplay = ''; // No amount for these types
+                    }
+
+                    transactionItem.innerHTML = `
+                        <span class="type">${transaction.description}</span>
+                        <div class="date-amount-group">
+                            <span class="date">${transaction.date}</span>
+                            <span class="${amountClass}">${amountDisplay}</span>
+                        </div>
+                    `;
+                    transactionHistoryList.appendChild(transactionItem);
+                });
+            } else {
+                transactionHistoryList.innerHTML = '<p class="text-gray-500 text-center py-4">No transactions yet.</p>';
+            }
+        }
+
+        /**
+         * Renders the details of the currently managed goal in the UI.
+         */
+        function renderManagedGoalDetails() {
+            const goal = savingsGoals.find(g => g.id === currentManagedGoalId);
+
+            if (goal) {
+                manageGoalName.textContent = goal.name;
+                manageCurrentAmount.textContent = `₱${goal.currentAmount.toFixed(2)}`;
+                manageTargetAmount.textContent = `₱${goal.targetAmount.toFixed(2)}`;
+                
+                manageDeadlineText.textContent = goal.deadline || 'N/A';
+                editDeadlineInput.value = goal.deadline || ''; 
+
+                const progress = (goal.currentAmount / goal.targetAmount) * 100;
+                manageProgressBar.style.width = `${progress > 100 ? 100 : progress}%`;
+                manageProgressPercentage.textContent = `${progress.toFixed(0)}%`;
+                
+                const isCompleted = progress >= 100;
+
+                // Enable/disable input and buttons
+                amountInput.disabled = isCompleted;
+                addFundsButton.disabled = isCompleted;
+                removeFundsButton.disabled = isCompleted;
+                editDeadlineInput.disabled = isCompleted;
+                updateDeadlineButton.disabled = isCompleted;
+                editDeadlineButton.disabled = isCompleted;
+
+                // Show/hide deadline edit group
+                deadlineEditGroup.style.display = 'none';
+                deadlineDisplayGroup.style.display = 'flex';
+
+                // Show/hide completed message
+                if (isCompleted) {
+                    completedMessageContainer.classList.add('show');
+                } else {
+                    completedMessageContainer.classList.remove('show');
+                }
+
+                amountInput.value = ''; // Clear input field
+                renderTransactionHistory(currentManagedGoalId); // Render transaction history
+            } else {
+                // If no goal is selected or found (e.g., after deletion)
+                manageGoalName.textContent = 'No Goal Selected';
+                manageCurrentAmount.textContent = '₱0.00';
+                manageTargetAmount.textContent = '₱0.00';
+                manageDeadlineText.textContent = 'N/A';
+                editDeadlineInput.value = '';
+                manageProgressBar.style.width = '0%';
+                manageProgressPercentage.textContent = '0%';
+                amountInput.value = '';
+                transactionHistoryList.innerHTML = '<p class="text-gray-500 text-center py-4">No transactions yet.</p>';
+
+                // Disable all controls if no goal is selected
+                amountInput.disabled = true;
+                addFundsButton.disabled = true;
+                removeFundsButton.disabled = true;
+                editDeadlineInput.disabled = true;
+                updateDeadlineButton.disabled = true;
+                editDeadlineButton.disabled = true;
+                deadlineEditGroup.style.display = 'none';
+                deadlineDisplayGroup.style.display = 'flex';
+                completedMessageContainer.classList.remove('show');
+            }
+        }
+
+        /**
+         * Displays the manage savings section for a specific goal.
+         * @param {string} goalId - The ID of the goal to manage.
+         */
+        function manageSavings(goalId) {
+            currentManagedGoalId = goalId;
+            renderManagedGoalDetails(); // Render details based on the selected goal
+            showTab('manage-savings');
+        }
+
+        /**
+         * Toggles the visibility of the deadline edit input and button.
+         */
+        editDeadlineButton.addEventListener('click', () => {
+            if (deadlineEditGroup.style.display === 'flex') {
+                deadlineEditGroup.style.display = 'none';
+                deadlineDisplayGroup.style.display = 'flex';
+            } else {
+                deadlineEditGroup.style.display = 'flex';
+                deadlineDisplayGroup.style.display = 'none';
+                // Set the input value to the current deadline when opening for edit
+                const goal = savingsGoals.find(g => g.id === currentManagedGoalId);
+                if (goal) {
+                    editDeadlineInput.value = goal.deadline || '';
+                }
+            }
+        });
+
+        /**
+         * Handles adding funds to the currently managed goal.
+         */
+        addFundsButton.addEventListener('click', () => {
+            if (!currentManagedGoalId) {
+                showMessageBox('Please select a goal first.'); 
+                return;
+            }
+            const amountToAdd = parseFloat(amountInput.value); 
+            if (isNaN(amountToAdd) || amountToAdd <= 0) {
+                showMessageBox('Please enter a valid positive amount to add.');
+                return;
+            }
+
+            const goalIndex = savingsGoals.findIndex(g => g.id === currentManagedGoalId);
+            if (goalIndex > -1) {
+                const goal = savingsGoals[goalIndex];
+                goal.currentAmount += amountToAdd;
+                const transactionDate = new Date().toISOString().split('T')[0]; 
+                goal.transactions.push({ type: 'add', amount: amountToAdd, date: transactionDate, description: 'Funds added' });
+
+                if (goal.currentAmount >= goal.targetAmount) {
+                    goal.status = 'completed';
+                } else {
+                    goal.status = 'in-progress';
+                }
+                showMessageBox(`₱${amountToAdd.toFixed(2)} added to "${goal.name}".`);
+                renderManagedGoalDetails(); // Re-render manage section details
+                renderHomeGoals();
+                renderHistoryGoals();
+            }
+        });
+
+        /**
+         * Handles removing funds from the currently managed goal.
+         */
+        removeFundsButton.addEventListener('click', () => {
+            if (!currentManagedGoalId) {
+                showMessageBox('Please select a goal first.'); 
+                return;
+            }
+            const amountToRemove = parseFloat(amountInput.value); 
+            if (isNaN(amountToRemove) || amountToRemove <= 0) {
+                showMessageBox('Please enter a valid positive amount to remove.');
+                return;
+            }
+
+            const goalIndex = savingsGoals.findIndex(g => g.id === currentManagedGoalId);
+            if (goalIndex > -1) {
+                const goal = savingsGoals[goalIndex];
+                if (goal.currentAmount - amountToRemove < 0) {
+                    showMessageBox('Cannot remove more funds than currently saved.');
+                    return;
+                }
+                goal.currentAmount -= amountToRemove;
+                const transactionDate = new Date().toISOString().split('T')[0]; 
+                goal.transactions.push({ type: 'remove', amount: amountToRemove, date: transactionDate, description: 'Funds removed' });
+
+                if (goal.currentAmount < goal.targetAmount) {
+                    goal.status = 'in-progress';
+                } else {
+                    goal.status = 'completed';
+                }
+                showMessageBox(`₱${amountToRemove.toFixed(2)} removed from "${goal.name}".`);
+                renderManagedGoalDetails(); // Re-render manage section details
+                renderHomeGoals();
+                renderHistoryGoals();
+            }
+        });
+
+        /**
+         * Handles updating the deadline for the currently managed goal.
+         */
+        updateDeadlineButton.addEventListener('click', () => {
+            if (!currentManagedGoalId) {
+                showMessageBox('Please select a goal first.'); 
+                return;
+            }
+            const newDeadline = editDeadlineInput.value;
+            if (!newDeadline) {
+                showMessageBox('Please select a valid deadline date.');
+                return;
+            }
+
+            const goalIndex = savingsGoals.findIndex(g => g.id === currentManagedGoalId);
+            if (goalIndex > -1) {
+                const goal = savingsGoals[goalIndex];
+                const oldDeadline = goal.deadline;
+                goal.deadline = newDeadline;
+                const transactionDate = new Date().toISOString().split('T')[0];
+                goal.transactions.push({ type: 'deadline_set', date: transactionDate, description: `Deadline changed from ${oldDeadline || 'N/A'} to ${newDeadline}` });
+                showMessageBox(`Deadline for "${goal.name}" updated to ${newDeadline}.`);
+                renderManagedGoalDetails(); // Re-render manage section details
+                renderHomeGoals();
+                renderHistoryGoals();
+            }
+        });
+
+
+        /**
+         * Marks a goal as complete by setting its current amount to the target amount and updating its status.
+         * @param {string} goalId - The ID of the goal to mark complete.
+         */
+        function markGoalComplete(goalId) {
+            const goalIndex = savingsGoals.findIndex(goal => goal.id === goalId);
+            if (goalIndex > -1) {
+                const goal = savingsGoals[goalIndex];
+                goal.currentAmount = goal.targetAmount;
+                goal.status = 'completed';
+                // Add a transaction for completion
+                const transactionDate = new Date().toISOString().split('T')[0];
+                goal.transactions.push({ type: 'status_change', date: transactionDate, description: 'Goal completed' });
+
+                showMessageBox(`Goal "${goal.name}" marked as completed!`);
+                renderHomeGoals(); // Re-render to move it to the completed section
+                renderHistoryGoals();
+                // If the completed goal is currently managed, update its display
+                if (currentManagedGoalId === goalId) {
+                    renderManagedGoalDetails();
+                }
+            }
+        }
+
+        /**
+         * Marks a goal as in-progress by setting its current amount to 0 and updating its status.
+         * @param {string} goalId - The ID of the goal to mark in-progress.
+         */
+        function markGoalInProgress(goalId) {
+            const goalIndex = savingsGoals.findIndex(goal => goal.id === goalId);
+            if (goalIndex > -1) {
+                const goal = savingsGoals[goalIndex];
+                goal.currentAmount = 0; // Reset progress
+                goal.status = 'in-progress';
+                // Add a transaction for status change
+                const transactionDate = new Date().toISOString().split('T')[0];
+                goal.transactions.push({ type: 'status_change', date: transactionDate, description: 'Goal marked in-progress' });
+
+                showMessageBox(`Goal "${goal.name}" marked as in-progress!`);
+                renderHomeGoals(); // Re-render to move it to the in-progress section
+                renderHistoryGoals();
+                // If the goal is currently managed, update its display
+                if (currentManagedGoalId === goalId) {
+                    renderManagedGoalDetails();
+                }
+            }
+        }
+
+        /**
+         * Initiates the deletion process by showing a confirmation dialog.
+         * @param {string} goalId - The ID of the goal to delete.
+         * @param {string} goalName - The name of the goal to delete (for display in dialog).
+         */
+        function confirmDeleteGoal(goalId, goalName) {
+            showConfirmationBox(`Are you sure you want to delete "${goalName}"?`, goalId);
+        }
+
+        /**
+         * Performs the actual deletion of a savings goal after confirmation.
+         * @param {string} goalId - The ID of the goal to delete.
+         */
+        function performDeleteGoal(goalId) {
+            const initialLength = savingsGoals.length;
+            savingsGoals = savingsGoals.filter(goal => goal.id !== goalId);
+            if (savingsGoals.length < initialLength) {
+                showMessageBox('Goal deleted successfully!');
+                renderHomeGoals();
+                renderHistoryGoals();
+                // If the deleted goal was the one currently managed, clear the managed state
+                if (currentManagedGoalId === goalId) {
+                    currentManagedGoalId = null;
+                    renderManagedGoalDetails(); // Clear UI
+                }
+            } else {
+                showMessageBox('Failed to delete goal.');
+            }
+        }
+
+        /**
+         * Handles the submission of the savings form (now for creating new goals).
+         * @param {Event} event - The form submission event.
+         */
+        savingsForm.addEventListener('submit', (event) => {
+            event.preventDefault(); // Prevent default form submission
+
+            const goalName = document.getElementById('goalName').value.trim();
+            const targetAmount = parseFloat(document.getElementById('targetAmount').value);
+            const initialSavedAmount = parseFloat(document.getElementById('initialSavedAmount').value) || 0; // Default to 0 if empty
+            const deadline = document.getElementById('deadline').value; // Get deadline value
+            const category = document.getElementById('category').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const dateCreated = new Date().toISOString().split('T')[0]; // Get current date inYYYY-MM-DD format
+
+            if (!goalName) {
+                showMessageBox('Please enter a goal name.');
+                return;
+            }
+            if (isNaN(targetAmount) || targetAmount <= 0) {
+                showMessageBox('Please enter a valid positive target amount.');
+                return;
+            }
+            if (isNaN(initialSavedAmount) || initialSavedAmount < 0) {
+                showMessageBox('Initial saved amount cannot be negative.');
+                return;
+            }
+            if (initialSavedAmount > targetAmount) {
+                showMessageBox('Initial saved amount cannot exceed target amount.');
+                return;
+            }
+
+            const newGoal = {
+                id: Date.now().toString(), // Simple unique ID
+                name: goalName,
+                targetAmount: targetAmount,
+                currentAmount: initialSavedAmount,
+                deadline: deadline, // Add deadline to goal object
+                category: category,
+                description: description,
+                dateCreated: dateCreated,
+                status: (initialSavedAmount >= targetAmount) ? 'completed' : 'in-progress', // Set initial status
+                transactions: [] // Initialize transactions array
+            };
+
+            // Add the initial creation transaction
+            newGoal.transactions.push({ type: 'created', date: dateCreated, description: 'Goal created' });
+            if (initialSavedAmount > 0) {
+                newGoal.transactions.push({ type: 'add', amount: initialSavedAmount, date: dateCreated, description: 'Initial funds added' });
+            }
+            if (deadline) {
+                newGoal.transactions.push({ type: 'deadline_set', date: dateCreated, description: `Deadline set to ${deadline}` });
+            }
+
+
+            savingsGoals.push(newGoal);
+
+            // Clear the form fields
+            savingsForm.reset();
+            document.getElementById('initialSavedAmount').value = '0'; // Reset initial saved amount to 0
+            document.getElementById('deadline').value = ''; // Clear deadline field
+
+            showMessageBox('New savings goal created successfully!');
+
+            // Update all relevant sections
+            renderHomeGoals();
+            renderHistoryGoals();
+
+            // Optionally, switch to home tab after adding
+            showTab('home');
+        });
+
+        /**
+         * Applies the selected theme color to the CSS variables.
+         * @param {string} color - The hex color string (e.g., '#RRGGBB').
+         */
+        function applyTheme(color) {
+            const root = document.documentElement;
+            root.style.setProperty('--primary-color', color);
+            
+            // Calculate a slightly darker shade for hover/active states
+            const darkerColor = darkenColor(color, 15); // Darken by 15%
+            root.style.setProperty('--primary-dark-color', darkerColor);
+
+            // Calculate a lighter shade for accent/inactive states
+            const lighterColor = lightenColor(color, 40); // Lighten by 40%
+            root.style.setProperty('--accent-color', lighterColor);
+
+            // Save the chosen color to localStorage
+            localStorage.setItem('themeColor', color);
+
+            // Update the color picker value (if it exists)
+            const themeColorPicker = document.getElementById('themeColorPicker');
+            if (themeColorPicker) {
+                themeColorPicker.value = color;
+            }
+
+            // Update active state of predefined color buttons (if they exist)
+            // This function is no longer directly called from a picker, but might be useful if re-added
+            // or for initial setup.
+            updatePredefinedColorButtons(); 
+        }
+
+        /**
+         * Darkens a hex color by a given percentage.
+         * @param {string} hex - The hex color string.
+         * @param {number} percent - The percentage to darken (e.g., 10 for 10%).
+         * @returns {string} The darkened hex color string.
+         */
+        function darkenColor(hex, percent) {
+            let f=parseInt(hex.slice(1),16),t=percent<0?0:255,p=percent<0?percent*-1:percent,R=f>>16,G=(f>>8)&0x00FF,B=f&0x0000FF;
+            return "#"+(0x1000000+(Math.round((t-R)*p/100)+R)*0x10000+(Math.round((t-G)*p/100)+G)*0x100+Math.round((t-B)*p/100)+B).toString(16).slice(1);
+        }
+
+        /**
+         * Lightens a hex color by a given percentage.
+         * @param {string} hex - The hex color string.
+         * @param {number} percent - The percentage to lighten (e.g., 10 for 10%).
+         * @returns {string} The lightened hex color string.
+         */
+        function lightenColor(hex, percent) {
+            let f=parseInt(hex.slice(1),16),t=percent<0?0:255,p=percent<0?percent*-1:percent,R=f>>16,G=(f>>8)&0x00FF,B=f&0x0000FF;
+            return "#"+(0x1000000+Math.round((t-R)*p/100)+R*0x10000+Math.round((t-G)*p/100)+G*0x100+Math.round((t-B)*p/100)+B).toString(16).slice(1);
+        }
+
+        /**
+         * Populates predefined color buttons and attaches event listeners.
+         * This function is no longer directly used in the current UI but kept for completeness.
+         */
+        function populatePredefinedColors() {
+            const predefinedColorsContainer = document.getElementById('predefinedColors');
+            if (predefinedColorsContainer) {
+                const predefinedColorOptions = [
+                    '#4f46e5', /* Default Purple */
+                    '#ef4444', /* Red */
+                    '#22c55e', /* Green */
+                    '#3b82f6', /* Blue */
+                    '#f97316', /* Orange */
+                    '#8b5cf6', /* Violet */
+                    '#ec4899', /* Pink */
+                    '#06b6d4'  /* Cyan */
+                ];
+                predefinedColorOptions.forEach(color => {
+                    const button = document.createElement('button');
+                    button.classList.add('predefined-color-button');
+                    button.style.backgroundColor = color;
+                    button.setAttribute('data-color', color);
+                    button.title = color;
+                    button.addEventListener('click', () => applyTheme(color));
+                    predefinedColorsContainer.appendChild(button);
+                });
+                updatePredefinedColorButtons(); // Set initial active state
+            }
+        }
+
+        /**
+         * Updates the 'active-theme' class on predefined color buttons based on the current theme.
+         * This function is no longer directly used in the current UI but kept for completeness.
+         */
+        function updatePredefinedColorButtons() {
+            const currentTheme = localStorage.getItem('themeColor') || '#4f46e5'; // Get current theme
+            document.querySelectorAll('.predefined-color-button').forEach(button => {
+                if (button.getAttribute('data-color') === currentTheme) {
+                    button.classList.add('active-theme');
+                } else {
+                    button.classList.remove('active-theme');
+                }
+            });
+        }
+
+        // Initialize the app by showing the home tab and rendering initial goals
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load saved theme or apply default
+            const savedTheme = localStorage.getItem('themeColor');
+            if (savedTheme) {
+                applyTheme(savedTheme);
+            } else {
+                applyTheme('#4f46e5'); // Apply default purple if no theme saved
+            }
+
+            // populatePredefinedColors(); // Removed call as picker is removed
+            showTab('home'); // Show home tab
+            renderManagedGoalDetails(); // Render with no goal selected initially
+        });
+    </script>
+</body>
+</html>
